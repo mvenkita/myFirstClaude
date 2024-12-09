@@ -421,7 +421,6 @@ const ModularApp = () => {
           Generate Shares
         </Button>
       </CardFooter>
-      {shares?.length > 0 && (
         <CardContent>
           <h3 className="text-lg font-semibold">Polynomial Coefficients:</h3>
           <ul className="list-disc pl-5">
@@ -440,7 +439,6 @@ const ModularApp = () => {
             ))}
           </ul>
         </CardContent>
-      )}
     </Card>
           </TabsContent>
  

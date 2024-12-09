@@ -16,6 +16,9 @@ const ModularApp = () => {
   const [operation, setOperation] = useState('add');
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const [secret, setSecret] = useState("");
+  const [shares, setShares] = useState([]);
+  const [coefficients, setCoefficients] = useState([]);
 
   // SHA256 Hashing State
   const [inputString, setInputString] = useState('');
@@ -164,10 +167,6 @@ const ModularApp = () => {
   };
 
 
-  const ShamirSecretSharing = () => {
-  const [secret, setSecret] = useState("");
-  const [shares, setShares] = useState([]);
-  const [coefficients, setCoefficients] = useState([]);
 
   const generateShares = () => {
     const secretNumber = parseInt(secret, 10);

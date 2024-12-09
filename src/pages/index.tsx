@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { randomBytes } from "crypto";
+import shamir from "shamir";
 
 const ModularApp = () => {
   // Modular Arithmetic State
@@ -162,15 +164,45 @@ const ModularApp = () => {
   };
 
 
+  const ShamirSecretSharing = () => {
+  const [secret, setSecret] = useState("");
+  const [shares, setShares] = useState([]);
+  const [coefficients, setCoefficients] = useState([]);
+
+  const generateShares = () => {
+    const secretNumber = parseInt(secret, 10);
+
+    if (isNaN(secretNumber) || secretNumber <= 0) {
+      alert("Please enter a valid positive number as the secret.");
+      return;
+    }
+
+    // Generate random coefficients for the polynomial
+    const coeffs = [
+      secretNumber, // Constant term (secret)
+      ...Array(2)
+        .fill(0)
+        .map(() => Math.floor(Math.random() * 100)), // Random coefficients for degree 3 polynomial
+    ];
+
+    setCoefficients(coeffs);
+
+    // Generate 6 shares using Shamir's Secret Sharing
+    const points = shamir.split(secretNumber, 6, 3); // 6 shares, 3 required to reconstruct
+
+    setShares(points);
+  };
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold text-center mb-6">Modules</h1>
       
       <Tabs defaultValue="modular-arithmetic" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="modular-arithmetic">Modular Arithmetic</TabsTrigger>
           <TabsTrigger value="sha256-hash">SHA256 Hash</TabsTrigger>
           <TabsTrigger value="merkle">Merkle Tree</TabsTrigger>
+          <TabsTrigger value="shamir">Secret Sharing</TabsTrigger>
         </TabsList>
         
         <TabsContent value="modular-arithmetic">
@@ -368,7 +400,53 @@ const ModularApp = () => {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
+
+          <TabsContent value="shamir">
+      <Card className="max-w-md mx-auto mt-10">
+      <CardHeader>
+        <CardTitle>Shamir's Secret Sharing</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <label className="block text-sm font-medium mb-1">Enter Secret (Number):</label>
+          <Input
+            type="number"
+            value={secret}
+            onChange={(e) => setSecret(e.target.value)}
+            placeholder="Enter a secret number"
+          />
+        </div>
+      </CardContent>
+      <CardFooter>
+        <Button onClick={generateShares} className="w-full">
+          Generate Shares
+        </Button>
+      </CardFooter>
+      {shares.length > 0 && (
+        <CardContent>
+          <h3 className="text-lg font-semibold">Polynomial Coefficients:</h3>
+          <ul className="list-disc pl-5">
+            {coefficients.map((coef, idx) => (
+              <li key={idx}>
+                Coefficient of x^{idx}: {coef}
+              </li>
+            ))}
+          </ul>
+          <h3 className="text-lg font-semibold mt-4">Shares:</h3>
+          <ul className="list-disc pl-5">
+            {shares.map((share, idx) => (
+              <li key={idx}>
+                Share {idx + 1}: ({share[0]}, {share[1]})
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      )}
+    </Card>
+          </TabsContent>
+ 
+  
+        </Tabs>
       
       <footer className="text-center text-sm text-gray-500 mt-6">
         © 2024 Ligero Inc.

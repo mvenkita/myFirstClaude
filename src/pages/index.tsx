@@ -122,7 +122,40 @@ const ModularApp = () => {
               <CardTitle>Modular Arithmetic Calculator</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+
+              <Accordion type="single" collapsible className="w-full mb-4">
+                <AccordionItem value="introduction">
+                  <AccordionTrigger>What is Modular Arithmetic?</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="text-sm space-y-2">
+                      <p>
+                        Modular arithmetic is like a mathematical clock where numbers "wrap around" after reaching a certain point (the modulus). 
+                        When using a prime number as the modulus, we create a special mathematical structure called a finite field.
+                      </p>
+                      
+                      <h3 className="font-semibold mt-2">Key Characteristics:</h3>
+                      <ul className="list-disc pl-5">
+                        <li>Uses a prime number p as the "clock face"</li>
+                        <li>Contains integers {"{0, 1, 2, ..., p-1}"}</li>
+                        <li>All arithmetic operations are performed modulo p</li>
+                      </ul>
+
+                      <h3 className="font-semibold mt-2">Operations Examples (mod 7):</h3>
+                      <div className="bg-gray-100 p-2 rounded">
+                        <p>Addition: 3 + 5 = 8 ≡ 1 (mod 7)</p>
+                        <p>Multiplication: 3 * 4 = 12 ≡ 5 (mod 7)</p>
+                        <p>Subtraction: 3 - 5 = -2 ≡ 5 (mod 7)</p>
+                      </div>
+
+                      <p className="mt-2">
+                        Applications include cryptography, error correction, and computer security algorithms.
+                      </p>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+
+            <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-2">
                   <Input 
                     type="number" 

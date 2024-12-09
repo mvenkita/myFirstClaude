@@ -101,14 +101,29 @@ const ModularApp = () => {
         .join('');
 
       setHashedOutput(hashHex);
-      return hashHex;
     } catch (error) {
       console.error('Hashing error:', error);
       setHashedOutput('Error generating hash');
+    }
+  };
+  const computeSHA256 = async (input) => {
+    if (!input) return '';
+    
+    try {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(input);
+      
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      
+      return hashHex;
+    } catch (error) {
+      console.error('Hashing failed:', error);
       return '';
     }
   };
-
   const [leafInputs, setLeafInputs] = useState({
     leaf1: '', leaf2: '', leaf3: '', leaf4: '', 
     leaf5: '', leaf6: '', leaf7: '', leaf8: ''
@@ -121,15 +136,15 @@ const ModularApp = () => {
 
   useEffect(() => {
     const computeHashes = async () => {
-      const node1Hash = await calculateSHA256(leafInputs.leaf1 + leafInputs.leaf2);
-      const node2Hash = await calculateSHA256(leafInputs.leaf3 + leafInputs.leaf4);
-      const node3Hash = await calculateSHA256(leafInputs.leaf5 + leafInputs.leaf6);
-      const node4Hash = await calculateSHA256(leafInputs.leaf7 + leafInputs.leaf8);
+      const node1Hash = await computeSHA256(leafInputs.leaf1 + leafInputs.leaf2);
+      const node2Hash = await computeSHA256(leafInputs.leaf3 + leafInputs.leaf4);
+      const node3Hash = await computeSHA256(leafInputs.leaf5 + leafInputs.leaf6);
+      const node4Hash = await computeSHA256(leafInputs.leaf7 + leafInputs.leaf8);
 
-      const node5Hash = await calculateSHA256(node1Hash + node2Hash);
-      const node6Hash = await calculateSHA256(node3Hash + node4Hash);
+      const node5Hash = await computeSHA256(node1Hash + node2Hash);
+      const node6Hash = await computeSHA256(node3Hash + node4Hash);
 
-      const rootHash = await calculateSHA256(node5Hash + node6Hash);
+      const rootHash = await computeSHA256(node5Hash + node6Hash);
 
       setNodeHashes({
         node1: node1Hash, node2: node2Hash, 

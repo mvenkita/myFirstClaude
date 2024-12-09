@@ -287,7 +287,6 @@ const ModularApp = () => {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
        
         <TabsContent value="merkle">
           <Card>

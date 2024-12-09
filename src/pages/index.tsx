@@ -3,8 +3,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-const ModularArithmeticCalculator = () => {
+const ModularApp = () => {
+  // Modular Arithmetic State
   const [num1, setNum1] = useState('');
   const [num2, setNum2] = useState('');
   const [prime, setPrime] = useState('');
@@ -12,7 +14,11 @@ const ModularArithmeticCalculator = () => {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
 
-  // Check if a number is prime
+  // SHA256 Hashing State
+  const [inputString, setInputString] = useState('');
+  const [hashedOutput, setHashedOutput] = useState('');
+
+  // Modular Arithmetic Calculations
   const isPrime = (n) => {
     if (n <= 1) return false;
     for (let i = 2; i <= Math.sqrt(n); i++) {
@@ -21,13 +27,10 @@ const ModularArithmeticCalculator = () => {
     return true;
   };
 
-  // Perform modular arithmetic
   const calculate = () => {
-    // Reset previous errors
     setError('');
     setResult(null);
 
-    // Validate inputs
     const a = parseInt(num1);
     const b = parseInt(num2);
     const p = parseInt(prime);
@@ -42,7 +45,6 @@ const ModularArithmeticCalculator = () => {
       return;
     }
 
-    // Perform operation
     let calcResult;
     switch (operation) {
       case 'add':
@@ -55,7 +57,6 @@ const ModularArithmeticCalculator = () => {
         calcResult = (a * b) % p;
         break;
       case 'divide':
-        // Modular multiplicative inverse for division
         const findInverse = (a, m) => {
           for (let x = 1; x < m; x++) {
             if ((a * x) % m === 1) return x;
@@ -77,75 +78,149 @@ const ModularArithmeticCalculator = () => {
     setResult(calcResult);
   };
 
+  // SHA256 Hashing Function
+  const calculateSHA256 = async () => {
+    if (!inputString) {
+      setHashedOutput('');
+      return;
+    }
+
+    try {
+      // Convert string to UTF-8 encoded Uint8Array
+      const encoder = new TextEncoder();
+      const data = encoder.encode(inputString);
+
+      // Hash the data using Web Crypto API
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+
+      // Convert buffer to hex string
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+
+      setHashedOutput(hashHex);
+    } catch (error) {
+      console.error('Hashing error:', error);
+      setHashedOutput('Error generating hash');
+    }
+  };
+
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle>Modular Arithmetic Calculator</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="grid grid-cols-3 gap-2">
-            <Input 
-              type="number" 
-              placeholder="First Number" 
-              value={num1} 
-              onChange={(e) => setNum1(e.target.value)}
-            />
-            <Select 
-              value={operation} 
-              onValueChange={setOperation}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="add">+</SelectItem>
-                <SelectItem value="subtract">-</SelectItem>
-                <SelectItem value="multiply">×</SelectItem>
-                <SelectItem value="divide">÷</SelectItem>
-              </SelectContent>
-            </Select>
-            <Input 
-              type="number" 
-              placeholder="Second Number" 
-              value={num2} 
-              onChange={(e) => setNum2(e.target.value)}
-            />
-          </div>
-          
-          <Input 
-            type="number" 
-            placeholder="Prime Modulus" 
-            value={prime} 
-            onChange={(e) => setPrime(e.target.value)}
-          />
-          
-          <Button 
-            onClick={calculate} 
-            className="w-full"
-          >
-            Calculate
-          </Button>
-          
-          {error && (
-            <div className="text-red-500 text-center">
-              {error}
-            </div>
-          )}
-          
-          {result !== null && (
-            <div className="text-center text-xl font-bold">
-              Result: {result}
-            </div>
-          )}
-        </div>
+    <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold text-center mb-6">Modules</h1>
+      
+      <Tabs defaultValue="modular-arithmetic" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="modular-arithmetic">Modular Arithmetic</TabsTrigger>
+          <TabsTrigger value="sha256-hash">SHA256 Hash</TabsTrigger>
+        </TabsList>
         
-        <div className="mt-4 text-sm text-gray-500 text-center">
-          Performs arithmetic operations modulo a prime number
-        </div>
-      </CardContent>
-    </Card>
+        <TabsContent value="modular-arithmetic">
+          <Card>
+            <CardHeader>
+              <CardTitle>Modular Arithmetic Calculator</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-2">
+                  <Input 
+                    type="number" 
+                    placeholder="First Number" 
+                    value={num1} 
+                    onChange={(e) => setNum1(e.target.value)}
+                  />
+                  <Select 
+                    value={operation} 
+                    onValueChange={setOperation}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="add">+</SelectItem>
+                      <SelectItem value="subtract">-</SelectItem>
+                      <SelectItem value="multiply">×</SelectItem>
+                      <SelectItem value="divide">÷</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input 
+                    type="number" 
+                    placeholder="Second Number" 
+                    value={num2} 
+                    onChange={(e) => setNum2(e.target.value)}
+                  />
+                </div>
+                
+                <Input 
+                  type="number" 
+                  placeholder="Prime Modulus" 
+                  value={prime} 
+                  onChange={(e) => setPrime(e.target.value)}
+                />
+                
+                <Button 
+                  onClick={calculate} 
+                  className="w-full"
+                >
+                  Calculate
+                </Button>
+                
+                {error && (
+                  <div className="text-red-500 text-center">
+                    {error}
+                  </div>
+                )}
+                
+                {result !== null && (
+                  <div className="text-center text-xl font-bold">
+                    Result: {result}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="sha256-hash">
+          <Card>
+            <CardHeader>
+              <CardTitle>SHA256 Hash Generator</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Input 
+                  placeholder="Enter string to hash" 
+                  value={inputString}
+                  onChange={(e) => setInputString(e.target.value)}
+                />
+                
+                <Button 
+                  onClick={calculateSHA256} 
+                  className="w-full"
+                >
+                  Generate Hash
+                </Button>
+                
+                {hashedOutput && (
+                  <div className="break-words">
+                    <strong>Hash:</strong> 
+                    <span className="block bg-gray-100 p-2 rounded mt-2">
+                      {hashedOutput}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+      
+      <footer className="text-center text-sm text-gray-500 mt-6">
+        © 2024 Ligero Inc.
+      </footer>
+    </div>
   );
 };
 
-export default ModularArithmeticCalculator;
+export default ModularApp;

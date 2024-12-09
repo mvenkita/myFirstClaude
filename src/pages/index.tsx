@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -107,14 +107,53 @@ const ModularApp = () => {
     }
   };
 
+  const [leafInputs, setLeafInputs] = useState({
+    leaf1: '', leaf2: '', leaf3: '', leaf4: '', 
+    leaf5: '', leaf6: '', leaf7: '', leaf8: ''
+  });
+
+  const [nodeHashes, setNodeHashes] = useState({
+    node1: '', node2: '', node3: '', node4: '',
+    node5: '', node6: '', root: ''
+  });
+
+  useEffect(() => {
+    const computeHashes = async () => {
+      const node1Hash = await computeSHA256(leafInputs.leaf1 + leafInputs.leaf2);
+      const node2Hash = await computeSHA256(leafInputs.leaf3 + leafInputs.leaf4);
+      const node3Hash = await computeSHA256(leafInputs.leaf5 + leafInputs.leaf6);
+      const node4Hash = await computeSHA256(leafInputs.leaf7 + leafInputs.leaf8);
+
+      const node5Hash = await computeSHA256(node1Hash + node2Hash);
+      const node6Hash = await computeSHA256(node3Hash + node4Hash);
+
+      const rootHash = await computeSHA256(node5Hash + node6Hash);
+
+      setNodeHashes({
+        node1: node1Hash, node2: node2Hash, 
+        node3: node3Hash, node4: node4Hash,
+        node5: node5Hash, node6: node6Hash, 
+        root: rootHash
+      });
+    };
+
+    computeHashes();
+  }, [leafInputs]);
+
+  const handleLeafChange = (leafKey, value) => {
+    setLeafInputs(prev => ({...prev, [leafKey]: value}));
+  };
+
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold text-center mb-6">Modules</h1>
       
       <Tabs defaultValue="modular-arithmetic" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="modular-arithmetic">Modular Arithmetic</TabsTrigger>
           <TabsTrigger value="sha256-hash">SHA256 Hash</TabsTrigger>
+          <TabsTrigger value="merkle">Merkle Tree</TabsTrigger>
         </TabsList>
         
         <TabsContent value="modular-arithmetic">
@@ -215,7 +254,7 @@ const ModularApp = () => {
             </CardContent>
           </Card>
         </TabsContent>
-        
+ 
         <TabsContent value="sha256-hash">
           <Card>
             <CardHeader>
@@ -245,6 +284,71 @@ const ModularApp = () => {
                   </div>
                 )}
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+       
+        <TabsContent value="merkle">
+          <Card>
+            <CardHeader>
+              <CardTitle>Merkle Tree</CardTitle>
+            </CardHeader>
+            <CardContent>
+      <div className="flex flex-col items-center space-y-4">
+        {/* Root Node */}
+        <div className="bg-gray-200 px-2 py-1 rounded text-xs w-48">
+          <strong>Root Hash:</strong>
+          <p className="break-words">{nodeHashes.root}</p>
+        </div>
+
+        {/* Layer 2 Nodes */}
+        <div className="flex space-x-8">
+          <div className="bg-gray-200 px-2 py-1 rounded text-xs w-36">
+            <strong>Node 5 Hash:</strong>
+            <p className="break-words">{nodeHashes.node5}</p>
+          </div>
+          <div className="bg-gray-200 px-2 py-1 rounded text-xs w-36">
+            <strong>Node 6 Hash:</strong>
+            <p className="break-words">{nodeHashes.node6}</p>
+          </div>
+        </div>
+
+        {/* Layer 1 Nodes */}
+        <div className="flex space-x-4">
+          <div className="bg-gray-200 px-2 py-1 rounded text-xs w-24">
+            <strong>Node 1 Hash:</strong>
+            <p className="break-words">{nodeHashes.node1}</p>
+          </div>
+          <div className="bg-gray-200 px-2 py-1 rounded text-xs w-24">
+            <strong>Node 2 Hash:</strong>
+            <p className="break-words">{nodeHashes.node2}</p>
+          </div>
+          <div className="bg-gray-200 px-2 py-1 rounded text-xs w-24">
+            <strong>Node 3 Hash:</strong>
+            <p className="break-words">{nodeHashes.node3}</p>
+          </div>
+          <div className="bg-gray-200 px-2 py-1 rounded text-xs w-24">
+            <strong>Node 4 Hash:</strong>
+            <p className="break-words">{nodeHashes.node4}</p>
+          </div>
+        </div>
+
+        {/* Leaf Nodes */}
+        <div className="grid grid-cols-8 gap-2">
+          {['leaf1', 'leaf2', 'leaf3', 'leaf4', 'leaf5', 'leaf6', 'leaf7', 'leaf8'].map((leafKey) => (
+            <input
+              key={leafKey}
+              type="text"
+              placeholder={`Leaf ${leafKey.slice(-1)}`}
+              value={leafInputs[leafKey]}
+              onChange={(e) => handleLeafChange(leafKey, e.target.value)}
+              className="border p-1 text-xs"
+            />
+          ))}
+        </div>
+      </div>
+
             </CardContent>
           </Card>
         </TabsContent>

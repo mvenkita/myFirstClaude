@@ -101,9 +101,11 @@ const ModularApp = () => {
         .join('');
 
       setHashedOutput(hashHex);
+      return hashHex;
     } catch (error) {
       console.error('Hashing error:', error);
       setHashedOutput('Error generating hash');
+      return '';
     }
   };
 

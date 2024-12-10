@@ -439,7 +439,7 @@ const ModularApp = () => {
           <ul className="list-disc pl-5">
             {shares.map((share, idx) => (
               <li key={idx}>
-                Share {idx + 1}: (share)
+                Share {idx + 1}: {share}
               </li>
             ))}
           </ul>

@@ -187,7 +187,7 @@ const ModularApp = () => {
     setCoefficients(coeffs);
 
     // Generate 6 shares using Shamir's Secret Sharing
-    const points = shamir.split(secretNumber, 6, 3); // 6 shares, 3 required to reconstruct
+    const points = shamir.split(randomBytes, 6, 3, secretNumber); // 6 shares, 3 required to reconstruct
 
     setShares(points);
   };
@@ -421,6 +421,7 @@ const ModularApp = () => {
           Generate Shares
         </Button>
       </CardFooter>
+      {shares.length > 0 && (
         <CardContent>
           <h3 className="text-lg font-semibold">Polynomial Coefficients:</h3>
           <ul className="list-disc pl-5">
@@ -434,11 +435,12 @@ const ModularApp = () => {
           <ul className="list-disc pl-5">
             {shares.map((share, idx) => (
               <li key={idx}>
-                Share {idx + 1}: {share}
+                Share {idx + 1}: ({share[0]}, {share[1]})
               </li>
             ))}
           </ul>
         </CardContent>
+      )}
     </Card>
           </TabsContent>
  

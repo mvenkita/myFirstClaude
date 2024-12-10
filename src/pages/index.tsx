@@ -335,16 +335,92 @@ const ModularApp = () => {
       </div>
     );
   };
+  // Utility to compute the SHA256 hash using the Web Crypto API
+  const sha256v2 = async (data: string): Promise<string> => {
+    const encoder = new TextEncoder();
+    const hashBuffer = await window.crypto.subtle.digest("SHA-256", encoder.encode(data));
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  };
+
+  // Function to compute the Merkle Tree
+  const computeMerkleTree = async (leaves: string[]): Promise<string[][]> => {
+    const hashedLeaves = await Promise.all(leaves.map(sha256v2));
+    let tree: string[][] = [hashedLeaves];
+
+    while (tree[tree.length - 1].length > 1) {
+      const currentLayer = tree[tree.length - 1];
+      const nextLayer = [];
+      for (let i = 0; i < currentLayer.length; i += 2) {
+        const left = currentLayer[i];
+        const right = currentLayer[i + 1] || left; // Handle odd leaves by duplicating
+        nextLayer.push(await sha256v2(left + right));
+      }
+      tree.push(nextLayer);
+    }
+
+    return tree;
+  };
+
+  // Function to compute decommitments (proofs)
+  const getDecommitment = (tree: string[][], index: number): string[] => {
+    const proof: string[] = [];
+    for (let i = 0; i < tree.length - 1; i++) {
+      const layer = tree[i];
+      const isRightNode = index % 2 === 1;
+      const pairIndex = isRightNode ? index - 1 : index + 1;
+
+      if (pairIndex < layer.length) {
+        proof.push(layer[pairIndex]);
+      }
+      index = Math.floor(index / 2);
+    }
+    return proof;
+  };
+  const [leavesInput, setLeavesInput] = useState<string>("");
+  const [merkleTree, setMerkleTree] = useState<string[][] | null>(null);
+  const [selectedLeafIndex, setSelectedLeafIndex] = useState<number | null>(null);
+  const [decommitment, setDecommitment] = useState<string[] | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleGenerateTree = async () => {
+    setIsLoading(true);
+    const leaves = leavesInput
+      .split(",")
+      .map((leaf) => leaf.trim())
+      .filter((leaf) => leaf !== "");
+    if (leaves.length === 0) {
+      alert("Please provide valid leaves (comma-separated).");
+      setIsLoading(false);
+      return;
+    }
+    const tree = await computeMerkleTree(leaves);
+    setMerkleTree(tree);
+    setSelectedLeafIndex(null);
+    setDecommitment(null);
+    setIsLoading(false);
+  };
+
+  const handleShowDecommitment = (index: number) => {
+    if (!merkleTree) return;
+    const proof = getDecommitment(merkleTree, index);
+    setSelectedLeafIndex(index);
+    setDecommitment(proof);
+  };
+
+
+
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold text-center mb-6">Modules</h1>
       
       <Tabs defaultValue="modular-arithmetic" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="modular-arithmetic">Modular Arithmetic</TabsTrigger>
           <TabsTrigger value="sha256-hash">SHA256 Hash</TabsTrigger>
           <TabsTrigger value="merkle">Merkle Tree</TabsTrigger>
+          <TabsTrigger value="merkle">Merkle Tree - ChatGPT</TabsTrigger>
           <TabsTrigger value="shamir">Secret Sharing</TabsTrigger>
         </TabsList>
         
@@ -566,7 +642,64 @@ const ModularApp = () => {
           </ul>
         </CardContent>
     </Card>
-          </TabsContent>
+
+    <TabsContent value="merkle-gpt">
+    <Card className="max-w-3xl mx-auto mt-10">
+        <CardHeader>
+          <CardTitle>Merkle Tree Visualization - ChatGPT</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Leaves (comma-separated):</label>
+              <Input
+                type="text"
+                value={leavesInput}
+                onChange={(e) => setLeavesInput(e.target.value)}
+                placeholder="e.g., leaf1, leaf2, leaf3"
+              />
+            </div>
+            <Button onClick={handleGenerateTree} className="w-full" disabled={isLoading}>
+              {isLoading ? "Generating..." : "Generate Merkle Tree"}
+            </Button>
+          </div>
+          {merkleTree && (
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold">Merkle Tree:</h3>
+              {merkleTree.map((layer, layerIndex) => (
+                <div key={layerIndex}>
+                  <h4>Layer {layerIndex}:</h4>
+                  <div className="flex flex-wrap space-x-2">
+                    {layer.map((node, nodeIndex) => (
+                      <div
+                        key={nodeIndex}
+                        className="border rounded-md p-2 cursor-pointer"
+                        onClick={() => handleShowDecommitment(nodeIndex)}
+                      >
+                        {node.substring(0, 8)}...
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {decommitment && selectedLeafIndex !== null && (
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold">Decommitment Proof for Leaf {selectedLeafIndex}:</h3>
+              <ul className="list-disc pl-5">
+                {decommitment.map((hash, index) => (
+                  <li key={index}>{hash}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+  </TabsContent>
+    
+ 
+    </TabsContent>
  
   
         </Tabs>

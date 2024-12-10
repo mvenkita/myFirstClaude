@@ -196,7 +196,7 @@ const ModularApp = () => {
     };
     const results = Array.from({ length: 7 }, (_, x) => evaluatePolynomial(coeffs, x));
     useEffect(() => {
-    console.log("Array elements:", results);
+    console.log("Array elements:", results); },[results]);
     setEvaluations(results);
   };
 

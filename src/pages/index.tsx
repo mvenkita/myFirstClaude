@@ -195,7 +195,7 @@ const ModularApp = () => {
     return coeff.reduce((acc, coef, index) => (acc + coef * Math.pow(x, index), 0));
     };
     const results = Array.from({ length: 7 }, (_, x) => evaluatePolynomial(coeffs, x));
-    setShares(results);
+    setEvaluations(results);
   };
 
   return (
@@ -449,7 +449,7 @@ const ModularApp = () => {
           </ul>
           <h3 className="text-lg font-semibold mt-4">Shares:</h3>
           <ul className="list-disc pl-5">
-            {shares.map((share, idx) => (
+            {evaluations.map((share, idx) => (
               <li key={idx}>
                 Server {idx + 1}'s share is {share}. This is p({idx}).
               </li>

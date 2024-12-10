@@ -184,7 +184,7 @@ const ModularApp = () => {
       secretNumber, // Constant term (secret)
       ...Array(3)
         .fill(0)
-        .map(() => Math.floor(Math.random() * 100)) % p, // Random coefficients for degree 3 polynomial
+        .map(() => Math.floor(Math.random() * 100)) % pp, // Random coefficients for degree 3 polynomial
     ];
 
     setCoefficients(coeffs);
@@ -192,7 +192,7 @@ const ModularApp = () => {
     // Generate 6 shares using Shamir's Secret Sharing
     // const points = shamir.split(generateRandomUint8Array, 6, 3, secretNumber); // 6 shares, 3 required to reconstruct
     const evaluatePolynomial = (coeffs: number[], x: number): number => {
-    return coeffs.reduce((acc, coef, index) => (acc + coef * Math.pow(x, index), 0))% p;
+    return coeffs.reduce((acc, coef, index) => (acc + coef * Math.pow(x, index), 0))% pp;
     };
     const results = Array.from({ length: 7 }, (_, x) => evaluatePolynomial(coeffs, x));
     setEvaluations(results);
@@ -452,7 +452,7 @@ const ModularApp = () => {
           <ul className="list-disc pl-5">
             {shares.map((share, idx) => (
               <li key={idx}>
-                Share {idx + 1}: {share}
+                Server {idx + 1}'s share is {share}. This is p({idx}).
               </li>
             ))}
           </ul>

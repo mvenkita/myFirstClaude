@@ -20,6 +20,8 @@ const ModularApp = () => {
   const [shares, setShares] = useState([]);
   const [coefficients, setCoefficients] = useState([]);
   const [evaluations, setEvaluations] = useState([]);//<number[] | null>(null);
+  const [leafValues, setLeafValues] = useState(['', '', '', '', '', '', '', '']);
+  const [highlightedNodes, setHighlightedNodes] = useState(new Set());
 
   // SHA256 Hashing State
   const [inputString, setInputString] = useState('');

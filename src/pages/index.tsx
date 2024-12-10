@@ -16,6 +16,7 @@ const ModularApp = () => {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [secret, setSecret] = useState("");
+  const [primeNum, setPrimeNum] = useState("");
   const [shares, setShares] = useState([]);
   const [coefficients, setCoefficients] = useState([]);
   const [evaluations, setEvaluations] = useState<number[] | null>(null);
@@ -418,6 +419,17 @@ const ModularApp = () => {
             value={secret}
             onChange={(e) => setSecret(e.target.value)}
             placeholder="Enter a secret number"
+          />
+        </div>
+      </CardContent>
+      <CardContent>
+        <div className="space-y-4">
+          <label className="block text-sm font-medium mb-1">Enter Secret (Number):</label>
+          <Input
+            type="number"
+            value={primeNum}
+            onChange={(e) => setPrimeNum(e.target.value)}
+            placeholder="Enter a prime number"
           />
         </div>
       </CardContent>

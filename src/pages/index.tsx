@@ -184,7 +184,7 @@ const ModularApp = () => {
       secretNumber, // Constant term (secret)
       ...Array(3)
         .fill(0)
-        .map(() => Math.floor(Math.random() * 100)) % pp, // Random coefficients for degree 3 polynomial
+        .map(() => Math.floor(Math.random() * 100) % pp), // Random coefficients for degree 3 polynomial
     ];
 
     setCoefficients(coeffs);

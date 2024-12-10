@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { randomBytes } from "crypto";
 import shamir from "shamir";
 
 const ModularApp = () => {
@@ -165,7 +164,18 @@ const ModularApp = () => {
   const handleLeafChange = (leafKey, value) => {
     setLeafInputs(prev => ({...prev, [leafKey]: value}));
   };
+  const [length, setLength] = useState<number>(0);
+  const [randomArray, setRandomArray] = useState<number[] | null>(null);
 
+  const generateRandomUint8Array = (length: number): number[] => {
+    if (!Number.isInteger(length) || length <= 0) {
+      throw new Error("Please provide a positive integer as the length.");
+    }
+
+    const randomArray = new Uint8Array(length);
+    window.crypto.getRandomValues(randomArray);
+    return Array.from(randomArray);
+  };
 
 
   const generateShares = () => {
@@ -187,7 +197,7 @@ const ModularApp = () => {
     setCoefficients(coeffs);
 
     // Generate 6 shares using Shamir's Secret Sharing
-    const points = shamir.split(randomBytes, 6, 3, secretNumber); // 6 shares, 3 required to reconstruct
+    const points = shamir.split(generateRandomUint8Array, 6, 3, secretNumber); // 6 shares, 3 required to reconstruct
 
     setShares(points);
   };

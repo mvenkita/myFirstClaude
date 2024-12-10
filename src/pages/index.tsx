@@ -192,6 +192,7 @@ const ModularApp = () => {
     // Generate 6 shares using Shamir's Secret Sharing
     // const points = shamir.split(generateRandomUint8Array, 6, 3, secretNumber); // 6 shares, 3 required to reconstruct
     const evaluatePolynomial = (coeff: number[], x: number): number => {
+      console.log("coeff is ", coeff);
     return coeff.reduce((acc, coef, index) => (acc + coef * Math.pow(x, index), 0));
     };
     console.log("Array elements:", coeffs); 

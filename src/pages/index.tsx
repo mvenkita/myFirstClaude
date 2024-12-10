@@ -483,11 +483,10 @@ const ModularApp = () => {
         <TabsContent value="merkle">
           <Card>
             <CardHeader>
-              <CardTitle>Merkle Tree</CardTitle>
+              <CardTitle>Merkle Tree Visualization</CardTitle>
             </CardHeader>
             <CardContent>
             <div className="flex flex-col items-center p-4 space-y-4">
-              <h2 className="text-xl font-bold">Merkle Tree Visualization</h2>
               <div className="flex flex-col items-center space-y-4">
                 {/* Root */}
                 <div className="flex justify-center">{renderNode(0)}</div>

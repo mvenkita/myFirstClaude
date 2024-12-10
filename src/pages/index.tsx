@@ -642,6 +642,7 @@ const ModularApp = () => {
           </ul>
         </CardContent>
     </Card>
+    </TabsContent>
 
     <TabsContent value="merkle-gpt">
     <Card className="max-w-3xl mx-auto mt-10">
@@ -699,7 +700,6 @@ const ModularApp = () => {
   </TabsContent>
     
  
-    </TabsContent>
  
   
         </Tabs>

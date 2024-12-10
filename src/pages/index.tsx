@@ -172,6 +172,7 @@ const ModularApp = () => {
 
   const generateShares = () => {
     const secretNumber = parseInt(secret, 10);
+    const pp = parseInt(primeNum, 10);
 
     if (isNaN(secretNumber) || secretNumber <= 0) {
       alert("Please enter a valid positive number as the secret.");
@@ -183,7 +184,7 @@ const ModularApp = () => {
       secretNumber, // Constant term (secret)
       ...Array(3)
         .fill(0)
-        .map(() => Math.floor(Math.random() * 100)), // Random coefficients for degree 3 polynomial
+        .map(() => Math.floor(Math.random() * 100)) % p, // Random coefficients for degree 3 polynomial
     ];
 
     setCoefficients(coeffs);
@@ -191,7 +192,7 @@ const ModularApp = () => {
     // Generate 6 shares using Shamir's Secret Sharing
     // const points = shamir.split(generateRandomUint8Array, 6, 3, secretNumber); // 6 shares, 3 required to reconstruct
     const evaluatePolynomial = (coeffs: number[], x: number): number => {
-    return coeffs.reduce((acc, coef, index) => acc + coef * Math.pow(x, index), 0);
+    return coeffs.reduce((acc, coef, index) => (acc + coef * Math.pow(x, index), 0))% p;
     };
     const results = Array.from({ length: 7 }, (_, x) => evaluatePolynomial(coeffs, x));
     setEvaluations(results);
@@ -424,7 +425,7 @@ const ModularApp = () => {
       </CardContent>
       <CardContent>
         <div className="space-y-4">
-          <label className="block text-sm font-medium mb-1">Enter Secret (Number):</label>
+          <label className="block text-sm font-medium mb-1">Enter Prime (Number):</label>
           <Input
             type="number"
             value={primeNum}

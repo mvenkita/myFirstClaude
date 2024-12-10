@@ -420,7 +420,7 @@ const ModularApp = () => {
           <TabsTrigger value="modular-arithmetic">Modular Arithmetic</TabsTrigger>
           <TabsTrigger value="sha256-hash">SHA256 Hash</TabsTrigger>
           <TabsTrigger value="merkle">Merkle Tree</TabsTrigger>
-          <TabsTrigger value="merkle">Merkle Tree - ChatGPT</TabsTrigger>
+          <TabsTrigger value="merkle-gpt">Merkle Tree - ChatGPT</TabsTrigger>
           <TabsTrigger value="shamir">Secret Sharing</TabsTrigger>
         </TabsList>
         

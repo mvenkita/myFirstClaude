@@ -192,12 +192,9 @@ const ModularApp = () => {
     // Generate 6 shares using Shamir's Secret Sharing
     // const points = shamir.split(generateRandomUint8Array, 6, 3, secretNumber); // 6 shares, 3 required to reconstruct
     const evaluatePolynomial = (coeff: number[], x: number): number => {
-      console.log("coeff is ", coeff);
-    return coeff.reduce((acc, coef, index) => (acc + coef * Math.pow(x, index), 0));
+    return coeff.reduce((acc, coef, index) => (acc + coef * Math.pow(x, index))%pp, 0);
     };
-    console.log("Array elements:", coeffs); 
     const results = Array.from({ length: 7 }, (_, x) => evaluatePolynomial(coeffs, x));
-    console.log("Array elements:", results); 
     setEvaluations(results);
   };
 

@@ -19,7 +19,7 @@ const ModularApp = () => {
   const [primeNum, setPrimeNum] = useState("");
   const [shares, setShares] = useState([]);
   const [coefficients, setCoefficients] = useState([]);
-  const [evaluations, setEvaluations] = useState<number[] | null>(null);
+  const [evaluations, setEvaluations] = useState([]);//<number[] | null>(null);
 
   // SHA256 Hashing State
   const [inputString, setInputString] = useState('');

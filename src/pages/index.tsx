@@ -724,16 +724,17 @@ const forwardFFT = (values, prime, root) => {
         </TabsContent>
 
           <TabsContent value="shamir">
-      <Card className="max-w-md mx-auto mt-10">
+      <Card>
       <CardHeader>
         <CardTitle>Packed Secret Sharing</CardTitle>
         <div className="text-sm text-gray-500 mt-2">
           <span className="mr-4">modulo = {PRIME}</span>
           <span>primitive root = {PRIMITIVE_ROOT}</span>
+          <span>l = 2,k = 4,n = 16</span>
         </div>
       </CardHeader>
       <CardContent>
-      <div className="flex gap-4">
+      <div className="space-y-4">
           <Input
             type="number"
             value={input1}

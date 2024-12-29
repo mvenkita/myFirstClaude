@@ -755,7 +755,7 @@ const forwardFFT = (values, prime, root) => {
             max="96"
             className="w-48"
           />
-          <Button onClick={handleCompute}>Compute shares</Button>
+          <Button onClick={handleCompute}>Encode</Button>
         </div>
 
         {secrets.length > 0 && (

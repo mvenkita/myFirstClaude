@@ -790,10 +790,7 @@ const forwardFFT = (values, prime, root) => {
           <div className="space-y-2">
             <h3 className="font-semibold">Encoding:</h3>
             <p className="break-all text-blue-600">{encoding.join(', ')}</p>
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="font-semibold">For all the tests in Stage 2, prover includes the coefficients in the proof rather than the encoding. The verifier can recompute both the secrets and encoding by re-evaluating the polynomial</h3>
+            <p className="font-semibold">For all the tests in Stage 2, prover includes the coefficients in the proof rather than the encoding. The verifier can recompute both the secrets and encoding by re-evaluating the polynomial</p>
           </div>
         )}
       </CardContent>

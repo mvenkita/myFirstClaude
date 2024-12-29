@@ -528,11 +528,11 @@ const forwardFFT = (values, prime, root) => {
     }
 
     // Compute forward FFT
-    const eval = forwardFFT(extendedVector, PRIME, PRIMITIVE_ROOT);
-    setEvaluation(eval);
+    const evalu = forwardFFT(extendedVector, PRIME, PRIMITIVE_ROOT);
+    setEvaluation(evalu);
 
     // Extract odd indices
-    const enc = eval.filter((_, index) => index % 2 === 1);
+    const enc = evalu.filter((_, index) => index % 2 === 1);
     setEncoding(enc);
   };
 

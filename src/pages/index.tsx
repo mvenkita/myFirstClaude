@@ -790,7 +790,7 @@ const forwardFFT = (values, prime, root) => {
           <div className="space-y-2">
             <h3 className="font-semibold">Encoding:</h3>
             <p className="break-all text-blue-600">{encoding.join(', ')}</p>
-            <p> Remark 1: For all the tests in Stage 2, prover includes the coefficients in the proof rather than the encoding. The verifier can recompute both the secrets and encoding by re-evaluating the polynomial. /p>
+            <p> Remark 1: For all the tests in Stage 2, prover includes the coefficients in the proof rather than the encoding. The verifier can recompute both the secrets and encoding by re-evaluating the polynomial. </p>
             <p> Remark 2: Note that the encoding length n does not have to be a power of 2. It can be set to any value upto 4k. You just need to pick the first n of the 4k values output in the encoding above.</p>
           </div>
         )}

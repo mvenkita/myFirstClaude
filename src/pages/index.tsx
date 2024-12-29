@@ -730,7 +730,9 @@ const forwardFFT = (values, prime, root) => {
         <div className="text-sm text-gray-500 mt-2">
           <span className="mr-4">modulo = {PRIME}</span>
           <span>primitive root = {PRIMITIVE_ROOT}</span>
-          <span>l = 2,k = 4,n = 16</span>
+          <span>l = 2</span>
+          <span>k = 4</span>
+          <span>n = 16</span>
         </div>
       </CardHeader>
       <CardContent>
@@ -758,7 +760,7 @@ const forwardFFT = (values, prime, root) => {
 
         {secrets.length > 0 && (
           <div className="space-y-2">
-            <h3 className="font-semibold">Secrets:</h3>
+            <h3 className="font-semibold">Secrets + Randomness:</h3>
             <p className="break-all text-green-600">{secrets.join(', ')}</p>
           </div>
         )}

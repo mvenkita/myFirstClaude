@@ -538,7 +538,7 @@ const forwardFFT = (values, prime, root) => {
 
   // Function to determine the color for evaluation indices
   const getEvaluationColor = (index) => {
-    if ([0, 7, 15, 23].includes(index)) return "text-green-600";
+    if ([0, 8, 16, 24].includes(index)) return "text-green-600";
     if (index % 2 === 1) return "text-blue-600";
     return "";
   };
@@ -758,7 +758,7 @@ const forwardFFT = (values, prime, root) => {
         {secrets.length > 0 && (
           <div className="space-y-2">
             <h3 className="font-semibold">Secrets:</h3>
-            <p className="break-all">{secrets.join(', ')}</p>
+            <p className="break-all text-green-600">{secrets.join(', ')}</p>
           </div>
         )}
 
@@ -786,7 +786,7 @@ const forwardFFT = (values, prime, root) => {
         {encoding.length > 0 && (
           <div className="space-y-2">
             <h3 className="font-semibold">Encoding:</h3>
-            <p className="break-all">{encoding.join(', ')}</p>
+            <p className="break-all text-blue-600">{encoding.join(', ')}</p>
           </div>
         )}
       </CardContent>

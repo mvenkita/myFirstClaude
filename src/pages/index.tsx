@@ -18,8 +18,6 @@ const ModularApp = () => {
   const [secret, setSecret] = useState("");
   const [primeNum, setPrimeNum] = useState("");
   const [shares, setShares] = useState([]);
-  const [coefficients, setCoefficients] = useState([]);
-  const [evaluations, setEvaluations] = useState([]);//<number[] | null>(null);
   const [leafValues, setLeafValues] = useState(['', '', '', '', '', '', '', '']);
   const [highlightedNodes, setHighlightedNodes] = useState(new Set());
 
@@ -278,33 +276,6 @@ const ModularApp = () => {
   };
 
 
-  const generateShares = () => {
-    const secretNumber = parseInt(secret, 10);
-    const pp = parseInt(primeNum, 10);
-
-    if (isNaN(secretNumber) || secretNumber <= 0) {
-      alert("Please enter a valid positive number as the secret.");
-      return;
-    }
-
-    // Generate random coefficients for the polynomial
-    const coeffs = [
-      secretNumber, // Constant term (secret)
-      ...Array(3)
-        .fill(0)
-        .map(() => Math.floor(Math.random() * 100) % pp), // Random coefficients for degree 3 polynomial
-    ];
-
-    setCoefficients(coeffs);
-
-    // Generate 6 shares using Shamir's Secret Sharing
-    // const points = shamir.split(generateRandomUint8Array, 6, 3, secretNumber); // 6 shares, 3 required to reconstruct
-    const evaluatePolynomial = (coeff: number[], x: number): number => {
-    return coeff.reduce((acc, coef, index) => (acc + coef * Math.pow(x, index))%pp, 0);
-    };
-    const results = Array.from({ length: 7 }, (_, x) => evaluatePolynomial(coeffs, x));
-    setEvaluations(results);
-  };
   // Node rendering function
   const renderNode = (index) => {
     const value = computeNodeValue(index);
@@ -409,7 +380,168 @@ const ModularApp = () => {
   };
 
 
+const PRIME = 97;
+const PRIMITIVE_ROOT = 5;
 
+// Modular exponentiation
+const modPow = (base, exp, modulus) => {
+  if (exp === 0) return 1;
+  let result = 1;
+  base = base % modulus;
+  while (exp > 0) {
+    if (exp & 1) result = (result * base) % modulus;
+    base = (base * base) % modulus;
+    exp = exp >> 1;
+  }
+  return result;
+};
+
+// Modular multiplicative inverse
+const modInverse = (a, m) => {
+  const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+  const extendedGcd = (a, b) => {
+    if (b === 0) return [1, 0];
+    const [x, y] = extendedGcd(b, a % b);
+    return [y, x - Math.floor(a / b) * y];
+  };
+  
+  if (gcd(a, m) !== 1) throw new Error("Inverse doesn't exist");
+  let [x] = extendedGcd(a, m);
+  return ((x % m) + m) % m;
+};
+
+// Bit-reversal permutation
+const bitReverse = (n, bits) => {
+  let reversed = 0;
+  for (let i = 0; i < bits; i++) {
+    reversed = (reversed << 1) | (n & 1);
+    n >>= 1;
+  }
+  return reversed;
+};
+
+// Inverse FFT implementation
+const inverseFFT = (values, prime, root) => {
+  const n = values.length;
+  const logN = Math.log2(n);
+  
+  // Get inverse of root for inverse FFT
+  root = modInverse(root, prime);
+  
+  // Bit-reverse copy
+  const result = new Array(n);
+  for (let i = 0; i < n; i++) {
+    result[bitReverse(i, logN)] = values[i];
+  }
+  
+  // Calculate inverse FFT
+  for (let s = 1; s <= logN; s++) {
+    const m = 1 << s;
+    const halfM = m >> 1;
+    const omega = modPow(root, (prime - 1) / m, prime);
+    
+    for (let k = 0; k < n; k += m) {
+      let current = 1;
+      for (let j = 0; j < halfM; j++) {
+        const t = (current * result[k + j + halfM]) % prime;
+        const u = result[k + j];
+        result[k + j] = (u + t) % prime;
+        result[k + j + halfM] = ((u - t) % prime + prime) % prime;
+        current = (current * omega) % prime;
+      }
+    }
+  }
+  
+  // Scale by n^(-1)
+  const nInv = modInverse(n, prime);
+  for (let i = 0; i < n; i++) {
+    result[i] = (result[i] * nInv) % prime;
+  }
+  
+  return result;
+};
+
+// Forward FFT implementation
+const forwardFFT = (values, prime, root) => {
+  const n = values.length;
+  const logN = Math.log2(n);
+  
+  // Bit-reverse copy
+  const result = new Array(n);
+  for (let i = 0; i < n; i++) {
+    result[bitReverse(i, logN)] = values[i];
+  }
+  
+  // Calculate forward FFT
+  for (let s = 1; s <= logN; s++) {
+    const m = 1 << s;
+    const halfM = m >> 1;
+    const omega = modPow(root, (prime - 1) / m, prime);
+    
+    for (let k = 0; k < n; k += m) {
+      let current = 1;
+      for (let j = 0; j < halfM; j++) {
+        const t = (current * result[k + j + halfM]) % prime;
+        const u = result[k + j];
+        result[k + j] = (u + t) % prime;
+        result[k + j + halfM] = ((u - t) % prime + prime) % prime;
+        current = (current * omega) % prime;
+      }
+    }
+  }
+  
+  return result;
+};
+
+  const [input1, setInput1] = useState('');
+  const [input2, setInput2] = useState('');
+  const [secrets, setSecrets] = useState([]);
+  const [coefficients, setCoefficients] = useState([]);
+  const [evaluation, setEvaluation] = useState([]);
+  const [encoding, setEncoding] = useState([]);
+
+  const handleCompute = () => {
+    // Validate inputs
+    const num1 = parseInt(input1);
+    const num2 = parseInt(input2);
+    if (isNaN(num1) || isNaN(num2) || num1 < 0 || num1 >= PRIME || num2 < 0 || num2 >= PRIME) {
+      alert('Please enter valid numbers between 0 and 96');
+      return;
+    }
+
+    // Generate random numbers
+    const random1 = Math.floor(Math.random() * PRIME);
+    const random2 = Math.floor(Math.random() * PRIME);
+
+    // Create initial vector
+    const initialVector = [num1, num2, random1, random2];
+    setSecrets(initialVector);
+
+    // Compute inverse FFT
+    const coeffs = inverseFFT(initialVector, PRIME, PRIMITIVE_ROOT);
+    setCoefficients(coeffs);
+
+    // Extend to 32 elements
+    const extendedVector = [...coeffs];
+    for (let i = coeffs.length; i < 32; i++) {
+      extendedVector.push(0);
+    }
+
+    // Compute forward FFT
+    const eval = forwardFFT(extendedVector, PRIME, PRIMITIVE_ROOT);
+    setEvaluation(eval);
+
+    // Extract odd indices
+    const enc = eval.filter((_, index) => index % 2 === 1);
+    setEncoding(enc);
+  };
+
+  // Function to determine the color for evaluation indices
+  const getEvaluationColor = (index) => {
+    if ([0, 7, 15, 23].includes(index)) return "text-green-600";
+    if (index % 2 === 1) return "text-blue-600";
+    return "";
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -421,7 +553,7 @@ const ModularApp = () => {
           <TabsTrigger value="sha256-hash">SHA256 Hash</TabsTrigger>
           <TabsTrigger value="merkle">Merkle Tree</TabsTrigger>
           <TabsTrigger value="merkle-gpt">Merkle Tree - ChatGPT</TabsTrigger>
-          <TabsTrigger value="shamir">Secret Sharing</TabsTrigger>
+          <TabsTrigger value="shamir">Packed Secret Sharing</TabsTrigger>
         </TabsList>
         
         <TabsContent value="modular-arithmetic">
@@ -594,54 +726,71 @@ const ModularApp = () => {
           <TabsContent value="shamir">
       <Card className="max-w-md mx-auto mt-10">
       <CardHeader>
-        <CardTitle>Shamir's Secret Sharing</CardTitle>
+        <CardTitle>Packed Secret Sharing</CardTitle>
+        <div className="text-sm text-gray-500 mt-2">
+          <span className="mr-4">modulo = {PRIME}</span>
+          <span>primitive root = {PRIMITIVE_ROOT}</span>
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          <label className="block text-sm font-medium mb-1">Enter Secret (Number):</label>
+      <div className="flex gap-4">
           <Input
             type="number"
-            value={secret}
-            onChange={(e) => setSecret(e.target.value)}
-            placeholder="Enter a secret number"
+            value={input1}
+            onChange={(e) => setInput1(e.target.value)}
+            placeholder="First number (0-96)"
+            min="0"
+            max="96"
+            className="w-48"
           />
-        </div>
-      </CardContent>
-      <CardContent>
-        <div className="space-y-4">
-          <label className="block text-sm font-medium mb-1">Enter Prime (Number):</label>
           <Input
             type="number"
-            value={primeNum}
-            onChange={(e) => setPrimeNum(e.target.value)}
-            placeholder="Enter a prime number"
+            value={input2}
+            onChange={(e) => setInput2(e.target.value)}
+            placeholder="Second number (0-96)"
+            min="0"
+            max="96"
+            className="w-48"
           />
+          <Button onClick={handleCompute}>Compute shares</Button>
         </div>
+
+        {secrets.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="font-semibold">Secrets:</h3>
+            <p className="break-all">{secrets.join(', ')}</p>
+          </div>
+        )}
+
+        {coefficients.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="font-semibold">Coefficients of the polynomial:</h3>
+            <p className="break-all">{coefficients.join(', ')}</p>
+          </div>
+        )}
+
+        {evaluation.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="font-semibold">Evaluation of the polynomial:</h3>
+            <p className="break-all">
+              {evaluation.map((value, index) => (
+                <span key={index} className={getEvaluationColor(index)}>
+                  {value}
+                  {index < evaluation.length - 1 ? ', ' : ''}
+                </span>
+              ))}
+            </p>
+          </div>
+        )}
+
+        {encoding.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="font-semibold">Encoding:</h3>
+            <p className="break-all">{encoding.join(', ')}</p>
+          </div>
+        )}
       </CardContent>
-      <CardFooter>
-        <Button onClick={generateShares} className="w-full">
-          Generate Shares
-        </Button>
-      </CardFooter>
-        <CardContent>
-          <h3 className="text-lg font-semibold">Polynomial Coefficients:</h3>
-          <ul className="list-disc pl-5">
-            {coefficients.map((coef, idx) => (
-              <li key={idx}>
-                Coefficient of x^{idx}: {coef}
-              </li>
-            ))}
-          </ul>
-          <h3 className="text-lg font-semibold mt-4">Shares:</h3>
-          <ul className="list-disc pl-5">
-            {evaluations.map((share, idx) => (
-              <li key={idx}>
-                Server {idx + 1}'s share is {share}. This is p({idx}).
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-    </Card>
+      </Card>
     </TabsContent>
 
     <TabsContent value="merkle-gpt">

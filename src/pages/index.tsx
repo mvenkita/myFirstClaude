@@ -729,9 +729,9 @@ const forwardFFT = (values, prime, root) => {
         <CardTitle>Packed Secret Sharing</CardTitle>
         <div className="text-sm text-gray-500 mt-2">
           <span className="mr-4">modulo = {PRIME}</span>
-          <span>primitive root = {PRIMITIVE_ROOT}</span>
-          <span>l = 2</span>
-          <span>k = 4</span>
+          <span className="mr-4">primitive root = {PRIMITIVE_ROOT}</span>
+          <span className="mr-4">l = 2</span>
+          <span className="mr-4">k = 4</span>
           <span>n = 16</span>
         </div>
       </CardHeader>

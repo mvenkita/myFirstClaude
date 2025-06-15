@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8 Queens Chess Puzzle</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            color: white;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .instructions {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .status {
+            padding: 10px 20px;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .status.win {
+            background: rgba(76, 175, 80, 0.8);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .chessboard {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            gap: 2px;
+            width: 400px;
+            height: 400px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin: 0 auto;
+        }
+
+        .square {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            user-select: none;
+        }
+
+        .square:hover {
+            transform: scale(1.1);
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .square.light {
+            background-color: #f0d9b5;
+            color: #333;
+        }
+
+        .square.dark {
+            background-color: #b58863;
+            color: #333;
+        }
+
+        .square.attacked {
+            background-color: rgba(244, 67, 54, 0.3) !important;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            75% { transform: translateX(2px); }
+        }
+
+        .queen {
+            font-size: 35px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            animation: placeQueen 0.3s ease-out;
+        }
+
+        @keyframes placeQueen {
+            0% { transform: scale(0) rotate(180deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            backdrop-filter: blur(5px);
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .reset-btn {
+            background: rgba(244, 67, 54, 0.8);
+        }
+
+        .reset-btn:hover {
+            background: rgba(244, 67, 54, 1);
+        }
+
+        .hint-btn {
+            background: rgba(76, 175, 80, 0.8);
+        }
+
+        .hint-btn:hover {
+            background: rgba(76, 175, 80, 1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>♛ 8 Queens Puzzle ♛</h1>
+        <div class="instructions">
+            Click squares to place/remove queens. No queen should attack another!
+        </div>
+        
+        <div class="game-info">
+            <div>Queens: <span id="queen-count">0</span>/8</div>
+            <div class="status" id="status">Place your queens</div>
+        </div>
+
+        <div class="chessboard" id="chessboard"></div>
+
+        <div class="controls">
+            <button class="reset-btn" onclick="resetGame()">Reset Game</button>
+            <button class="hint-btn" onclick="showHint()">Show Hint</button>
+        </div>
+    </div>
+
+    <script>
+        const board = Array(8).fill().map(() => Array(8).fill(false));
+        let queenCount = 0;
+        let hintShown = false;
+
+        function createBoard() {
+            const chessboard = document.getElementById('chessboard');
+            chessboard.innerHTML = '';
+            
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const square = document.createElement('div');
+                    square.className = `square ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
+                    square.dataset.row = row;
+                    square.dataset.col = col;
+                    square.addEventListener('click', () => toggleQueen(row, col));
+                    chessboard.appendChild(square);
+                }
+            }
+        }
+
+        function toggleQueen(row, col) {
+            if (board[row][col]) {
+                removeQueen(row, col);
+            } else {
+                placeQueen(row, col);
+            }
+            updateDisplay();
+            checkWin();
+        }
+
+        function placeQueen(row, col) {
+            board[row][col] = true;
+            queenCount++;
+            const square = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            square.innerHTML = '<div class="queen">♛</div>';
+            hintShown = false;
+        }
+
+        function removeQueen(row, col) {
+            board[row][col] = false;
+            queenCount--;
+            const square = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            square.innerHTML = '';
+            hintShown = false;
+        }
+
+        function isQueenAttacked(row, col) {
+            // Check if any other queen attacks this position
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (board[r][c] && (r !== row || c !== col)) {
+                        // Same row or column
+                        if (r === row || c === col) return true;
+                        // Same diagonal
+                        if (Math.abs(r - row) === Math.abs(c - col)) return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function updateDisplay() {
+            document.getElementById('queen-count').textContent = queenCount;
+            
+            // Clear previous attack indicators
+            document.querySelectorAll('.square').forEach(square => {
+                square.classList.remove('attacked');
+            });
+
+            // Show attacked squares
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    if (board[row][col] && isQueenAttacked(row, col)) {
+                        const square = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                        square.classList.add('attacked');
+                    }
+                }
+            }
+        }
+
+        function checkWin() {
+            const status = document.getElementById('status');
+            
+            if (queenCount === 8) {
+                let hasConflicts = false;
+                for (let row = 0; row < 8; row++) {
+                    for (let col = 0; col < 8; col++) {
+                        if (board[row][col] && isQueenAttacked(row, col)) {
+                            hasConflicts = true;
+                            break;
+                        }
+                    }
+                    if (hasConflicts) break;
+                }
+                
+                if (!hasConflicts) {
+                    status.textContent = '🎉 YOU WIN! 🎉';
+                    status.classList.add('win');
+                } else {
+                    status.textContent = 'Queens are attacking each other!';
+                    status.classList.remove('win');
+                }
+            } else {
+                status.textContent = `Place ${8 - queenCount} more queen${8 - queenCount === 1 ? '' : 's'}`;
+                status.classList.remove('win');
+            }
+        }
+
+        function resetGame() {
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    board[row][col] = false;
+                }
+            }
+            queenCount = 0;
+            hintShown = false;
+            createBoard();
+            updateDisplay();
+            checkWin();
+        }
+
+        function showHint() {
+            if (hintShown) return;
+            
+            // One of many valid solutions: place queens at positions that don't attack each other
+            const solution = [
+                [0, 1], [1, 3], [2, 5], [3, 7], [4, 2], [5, 0], [6, 6], [7, 4]
+            ];
+            
+            // Clear current board
+            resetGame();
+            
+            // Place solution queens with a nice animation delay
+            solution.forEach(([row, col], index) => {
+                setTimeout(() => {
+                    placeQueen(row, col);
+                    updateDisplay();
+                    checkWin();
+                }, index * 200);
+            });
+            
+            hintShown = true;
+        }
+
+        // Initialize the game
+        createBoard();
+        updateDisplay();
+        checkWin();
+    </script>
+</body>
+</html>

@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBOR Mobile Driver's License Decoder</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cbor-js/0.1.0/cbor.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .upload-section {
+            margin-bottom: 40px;
+        }
+
+        .upload-area {
+            border: 3px dashed #3498db;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .upload-area:hover {
+            border-color: #2980b9;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            transform: translateY(-2px);
+        }
+
+        .upload-area.dragover {
+            border-color: #27ae60;
+            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.2rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .textarea-field {
+            width: 100%;
+            min-height: 120px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-clear {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+            margin-left: 15px;
+        }
+
+        .btn-clear:hover {
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        }
+
+        .results {
+            margin-top: 40px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .results.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #3498db;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            margin-right: 15px;
+            color: #3498db;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .data-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+        }
+
+        .data-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-value {
+            color: #34495e;
+            font-size: 1.1rem;
+            word-break: break-word;
+        }
+
+        .json-viewer {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 25px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        .error {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-weight: 500;
+        }
+
+        .success {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-weight: 500;
+        }
+
+        .format-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 5px;
+        }
+
+        .format-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .format-tab.active {
+            background: #3498db;
+            color: white;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .photo-preview {
+            max-width: 200px;
+            max-height: 250px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin: 10px 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .data-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🆔 CBOR mDL Decoder</h1>
+            <p>Decode and visualize Mobile Driver's License data from CBOR format</p>
+        </div>
+        
+        <div class="content">
+            <div class="upload-section">
+                <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">Drop CBOR file here or click to browse</div>
+                    <div class="upload-subtext">Supports .cbor, .bin, and other binary file formats</div>
+                    <input type="file" id="fileInput" class="file-input" accept=".cbor,.bin,*/*">
+                </div>
+            </div>
+
+            <div class="input-section">
+                <div class="format-tabs">
+                    <div class="format-tab active" data-format="hex">Hex Input</div>
+                    <div class="format-tab" data-format="base64">Base64 Input</div>
+                </div>
+                
+                <textarea 
+                    id="inputData" 
+                    class="input-field textarea-field" 
+                    placeholder="Enter CBOR data as hex (e.g., A1636167651821) or base64..."
+                ></textarea>
+                
+                <div style="margin-top: 15px;">
+                    <button class="btn" onclick="decodeCBOR()">🔍 Decode CBOR</button>
+                    <button class="btn btn-clear" onclick="clearAll()">🗑️ Clear All</button>
+                </div>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <div>Decoding CBOR data...</div>
+            </div>
+
+            <div class="results" id="results"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentFormat = 'hex';
+        let decodedData = null;
+
+        // Format tab switching
+        document.querySelectorAll('.format-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.format-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                currentFormat = this.dataset.format;
+                document.getElementById('inputData').placeholder = 
+                    currentFormat === 'hex' ? 
+                    'Enter CBOR data as hex (e.g., A1636167651821)...' : 
+                    'Enter CBOR data as base64...';
+            });
+        });
+
+        // File upload handling
+        const uploadArea = document.querySelector('.upload-area');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+            }
+        });
+
+        function handleFileUpload(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const arrayBuffer = e.target.result;
+                const uint8Array = new Uint8Array(arrayBuffer);
+                
+                // Convert to hex for display
+                const hexString = Array.from(uint8Array)
+                    .map(byte => byte.toString(16).padStart(2, '0'))
+                    .join('');
+                
+                document.getElementById('inputData').value = hexString;
+                
+                // Auto-decode
+                setTimeout(() => {
+                    decodeCBOR();
+                }, 100);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function hexToUint8Array(hexString) {
+            const cleanHex = hexString.replace(/[^0-9a-fA-F]/g, '');
+            const result = new Uint8Array(cleanHex.length / 2);
+            for (let i = 0; i < cleanHex.length; i += 2) {
+                result[i / 2] = parseInt(cleanHex.substr(i, 2), 16);
+            }
+            return result;
+        }
+
+        function base64ToUint8Array(base64String) {
+            const binaryString = atob(base64String.replace(/[^A-Za-z0-9+/]/g, ''));
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes;
+        }
+
+        function decodeCBORBasic(data) {
+            // Basic CBOR decoder implementation
+            let pos = 0;
+            
+            function readByte() {
+                if (pos >= data.length) throw new Error('Unexpected end of CBOR data');
+                return data[pos++];
+            }
+            
+            function readBytes(length) {
+                if (pos + length > data.length) throw new Error('Unexpected end of CBOR data');
+                const result = data.slice(pos, pos + length);
+                pos += length;
+                return result;
+            }
+            
+            function readUint(bytes) {
+                let result = 0;
+                for (let i = 0; i < bytes; i++) {
+                    result = (result << 8) | readByte();
+                }
+                return result;
+            }
+            
+            function decodeValue() {
+                const firstByte = readByte();
+                const majorType = firstByte >> 5;
+                const additionalInfo = firstByte & 0x1f;
+                
+                let length;
+                if (additionalInfo < 24) {
+                    length = additionalInfo;
+                } else if (additionalInfo === 24) {
+                    length = readByte();
+                } else if (additionalInfo === 25) {
+                    length = readUint(2);
+                } else if (additionalInfo === 26) {
+                    length = readUint(4);
+                } else if (additionalInfo === 27) {
+                    length = readUint(8);
+                } else if (additionalInfo === 31) {
+                    length = -1; // indefinite length
+                } else {
+                    throw new Error('Invalid CBOR additional info: ' + additionalInfo);
+                }
+                
+                switch (majorType) {
+                    case 0: // unsigned integer
+                        return length;
+                    
+                    case 1: // negative integer
+                        return -1 - length;
+                    
+                    case 2: // byte string
+                        if (length === -1) {
+                            // indefinite length - not implemented
+                            throw new Error('Indefinite length byte strings not supported');
+                        }
+                        return readBytes(length);
+                    
+                    case 3: // text string
+                        if (length === -1) {
+                            // indefinite length - not implemented
+                            throw new Error('Indefinite length text strings not supported');
+                        }
+                        const textBytes = readBytes(length);
+                        return new TextDecoder().decode(textBytes);
+                    
+                    case 4: // array
+                        const array = [];
+                        if (length === -1) {
+                            // indefinite length
+                            while (true) {
+                                const next = data[pos];
+                                if (next === 0xff) {
+                                    pos++;
+                                    break;
+                                }
+                                array.push(decodeValue());
+                            }
+                        } else {
+                            for (let i = 0; i < length; i++) {
+                                array.push(decodeValue());
+                            }
+                        }
+                        return array;
+                    
+                    case 5: // map
+                        const map = {};
+                        if (length === -1) {
+                            // indefinite length
+                            while (true) {
+                                const next = data[pos];
+                                if (next === 0xff) {
+                                    pos++;
+                                    break;
+                                }
+                                const key = decodeValue();
+                                const value = decodeValue();
+                                map[key] = value;
+                            }
+                        } else {
+                            for (let i = 0; i < length; i++) {
+                                const key = decodeValue();
+                                const value = decodeValue();
+                                map[key] = value;
+                            }
+                        }
+                        return map;
+                    
+                    case 6: // semantic tag
+                        const tag = length;
+                        const value = decodeValue();
+                        // For now, just return the value, ignoring the tag
+                        return value;
+                    
+                    case 7: // simple/float
+                        if (additionalInfo < 20) {
+                            return additionalInfo;
+                        } else if (additionalInfo === 20) {
+                            return false;
+                        } else if (additionalInfo === 21) {
+                            return true;
+                        } else if (additionalInfo === 22) {
+                            return null;
+                        } else if (additionalInfo === 23) {
+                            return undefined;
+                        } else if (additionalInfo === 25) {
+                            // half-precision float (not implemented)
+                            throw new Error('Half-precision floats not supported');
+                        } else if (additionalInfo === 26) {
+                            // single-precision float
+                            const bytes = readBytes(4);
+                            const view = new DataView(bytes.buffer);
+                            return view.getFloat32(0, false);
+                        } else if (additionalInfo === 27) {
+                            // double-precision float
+                            const bytes = readBytes(8);
+                            const view = new DataView(bytes.buffer);
+                            return view.getFloat64(0, false);
+                        } else {
+                            throw new Error('Invalid simple value: ' + additionalInfo);
+                        }
+                    
+                    default:
+                        throw new Error('Invalid CBOR major type: ' + majorType);
+                }
+            }
+            
+            return decodeValue();
+        }
+
+        function decodeCBOR() {
+            const inputData = document.getElementById('inputData').value.trim();
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            
+            if (!inputData) {
+                showError('Please enter CBOR data or upload a file');
+                return;
+            }
+
+            loading.style.display = 'block';
+            results.innerHTML = '';
+            results.classList.remove('show');
+
+            try {
+                let uint8Array;
+                
+                if (currentFormat === 'hex') {
+                    uint8Array = hexToUint8Array(inputData);
+                } else {
+                    uint8Array = base64ToUint8Array(inputData);
+                }
+
+                // Decode CBOR
+                let decoded;
+                if (typeof CBOR !== 'undefined' && CBOR.decode) {
+                    decoded = CBOR.decode(uint8Array.buffer);
+                } else {
+                    // Fallback to basic CBOR decoder
+                    decoded = decodeCBORBasic(uint8Array);
+                }
+                decodedData = decoded;
+                
+                loading.style.display = 'none';
+                displayResults(decoded);
+                
+            } catch (error) {
+                loading.style.display = 'none';
+                showError('Failed to decode CBOR data: ' + error.message);
+            }
+        }
+
+        function displayResults(data) {
+            const results = document.getElementById('results');
+            
+            let html = '<div class="success">✅ CBOR data decoded successfully!</div>';
+            
+            // Check if this looks like mDL data
+            if (isLikelyMDL(data)) {
+                html += renderMDLData(data);
+            } else {
+                html += renderGenericData(data);
+            }
+            
+            // Always show raw JSON
+            html += `
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">📋</div>
+                        <div class="card-title">Raw Decoded Data</div>
+                    </div>
+                    <div class="json-viewer">${JSON.stringify(data, null, 2)}</div>
+                </div>
+            `;
+            
+            results.innerHTML = html;
+            results.classList.add('show');
+        }
+
+        function isLikelyMDL(data) {
+            // Check for common mDL structure indicators
+            if (typeof data === 'object' && data !== null) {
+                // Look for common mDL namespaces or fields
+                const hasDocType = data.docType || data.doctype;
+                const hasNamespaces = data.nameSpaces || data.namespaces;
+                const hasMDLFields = JSON.stringify(data).includes('org.iso.18013.5.1') || 
+                                   JSON.stringify(data).includes('driving_privileges') ||
+                                   JSON.stringify(data).includes('family_name') ||
+                                   JSON.stringify(data).includes('given_name');
+                
+                return hasDocType || hasNamespaces || hasMDLFields;
+            }
+            return false;
+        }
+
+        function renderMDLData(data) {
+            let html = `
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">🪪</div>
+                        <div class="card-title">Mobile Driver's License Data</div>
+                    </div>
+            `;
+            
+            // Extract and display mDL fields
+            const mdlFields = extractMDLFields(data);
+            
+            if (mdlFields.length > 0) {
+                html += '<div class="data-grid">';
+                mdlFields.forEach(field => {
+                    html += `
+                        <div class="data-item">
+                            <div class="data-label">${field.label}</div>
+                            <div class="data-value">${field.value}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            } else {
+                html += '<p>No recognizable mDL fields found in the decoded data.</p>';
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        function extractMDLFields(data) {
+            const fields = [];
+            const fieldMappings = {
+                'family_name': 'Family Name',
+                'given_name': 'Given Name',
+                'birth_date': 'Birth Date',
+                'issue_date': 'Issue Date',
+                'expiry_date': 'Expiry Date',
+                'issuing_country': 'Issuing Country',
+                'issuing_authority': 'Issuing Authority',
+                'document_number': 'Document Number',
+                'driving_privileges': 'Driving Privileges',
+                'portrait': 'Portrait Photo',
+                'signature_usual_mark': 'Signature',
+                'sex': 'Sex',
+                'height': 'Height',
+                'weight': 'Weight',
+                'eye_colour': 'Eye Color',
+                'hair_colour': 'Hair Color',
+                'resident_address': 'Address',
+                'age_in_years': 'Age',
+                'age_birth_year': 'Birth Year',
+                'nationality': 'Nationality'
+            };
+            
+            function searchObject(obj, path = '') {
+                if (typeof obj === 'object' && obj !== null) {
+                    for (const [key, value] of Object.entries(obj)) {
+                        const currentPath = path ? `${path}.${key}` : key;
+                        
+                        if (fieldMappings[key]) {
+                            let displayValue = value;
+                            
+                            // Handle special data types
+                            if (key === 'portrait' && value instanceof Uint8Array) {
+                                displayValue = `<img src="data:image/jpeg;base64,${arrayBufferToBase64(value)}" class="photo-preview" alt="Portrait">`;
+                            } else if (key === 'birth_date' || key === 'issue_date' || key === 'expiry_date') {
+                                displayValue = formatDate(value);
+                            } else if (key === 'driving_privileges' && Array.isArray(value)) {
+                                displayValue = value.map(priv => 
+                                    `Category: ${priv.vehicle_category_code || 'Unknown'}`
+                                ).join(', ');
+                            } else if (typeof value === 'object') {
+                                displayValue = JSON.stringify(value, null, 2);
+                            }
+                            
+                            fields.push({
+                                label: fieldMappings[key],
+                                value: displayValue,
+                                rawValue: value
+                            });
+                        }
+                        
+                        // Recursively search nested objects
+                        if (typeof value === 'object' && value !== null) {
+                            searchObject(value, currentPath);
+                        }
+                    }
+                }
+            }
+            
+            searchObject(data);
+            return fields;
+        }
+
+        function renderGenericData(data) {
+            return `
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon">📊</div>
+                        <div class="card-title">Decoded CBOR Data</div>
+                    </div>
+                    <p>The decoded data doesn't appear to be in a recognized mDL format. Showing raw decoded content below.</p>
+                </div>
+            `;
+        }
+
+        function formatDate(dateValue) {
+            if (typeof dateValue === 'string') {
+                return dateValue;
+            }
+            if (typeof dateValue === 'number') {
+                return new Date(dateValue * 1000).toLocaleDateString();
+            }
+            return JSON.stringify(dateValue);
+        }
+
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binary);
+        }
+
+        function showError(message) {
+            const results = document.getElementById('results');
+            results.innerHTML = `<div class="error">❌ ${message}</div>`;
+            results.classList.add('show');
+        }
+
+        function clearAll() {
+            document.getElementById('inputData').value = '';
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('results').classList.remove('show');
+            document.getElementById('fileInput').value = '';
+            decodedData = null;
+        }
+    </script>
+</body>
+</html>

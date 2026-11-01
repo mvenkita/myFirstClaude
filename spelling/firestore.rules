@@ -1,0 +1,33 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owner(teacher) {
+      return request.auth != null && request.auth.uid == teacher;
+    }
+    match /teachers/{teacher}/students/{student} {
+      allow read: if owner(teacher);
+      allow create, update: if owner(teacher)
+        && request.resource.data.keys().hasOnly(['name','createdAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 60
+        && request.resource.data.createdAt is number;
+    }
+    match /teachers/{teacher}/attempts/{attempt} {
+      allow read: if owner(teacher);
+      allow create: if owner(teacher)
+        && request.resource.data.keys().hasOnly(['studentId','wordId','outcome','createdAt','sessionId','voided'])
+        && request.resource.data.studentId is string
+        && exists(/databases/$(database)/documents/teachers/$(teacher)/students/$(request.resource.data.studentId))
+        && request.resource.data.wordId is string
+        && request.resource.data.wordId.size() <= 100
+        && request.resource.data.outcome in ['correct','incorrect','slow','two']
+        && request.resource.data.createdAt is number
+        && request.resource.data.sessionId is string
+        && request.resource.data.voided == false;
+      allow update: if owner(teacher)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['voided'])
+        && request.resource.data.voided == true;
+    }
+  }
+}
